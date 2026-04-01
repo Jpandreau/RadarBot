@@ -1,0 +1,8 @@
+services:
+  radarbot:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./seen_jobs.json:/app/seen_jobs.json
