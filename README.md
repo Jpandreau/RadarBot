@@ -1,66 +1,106 @@
 # RadarBot
 
-Python scraper that monitors job offers (Welcome to the Jungle, Indeed) and upcoming CTF competitions (CTFtime), then sends real-time Discord notifications based on your keywords and filters.
+Python scraper that monitors IT job offers from Welcome to the Jungle and Hellowork, then sends real-time Discord notifications based on keywords and a geographic radius filter.
 
 ---
 
 ## Features
 
-- Scrapes job offers from **Welcome to the Jungle** and **Indeed**
-- Fetches upcoming CTFs from **CTFtime**
-- Sends notifications via **Discord webhook**
-- Configurable keywords, location, and CTF weight filter
-- Runs on a scheduled interval
+- Scrapes job offers from **Welcome to the Jungle** (via Algolia API) and **Hellowork** (HTML parsing)
+- Filters IT-related jobs only (regex on title)
+- Geographic filter: **200km radius around Moulins (03)**
+- Sends notifications via **Discord webhook** (embedded messages)
+- Deduplication via `seen_jobs.json` — no double notifications
+- Runs every **6 hours** on a scheduled interval
 
 ---
 
 ## Project Structure
 
 ```
-scraper/
+RadarBot/
 ├── scrapers/
-│   ├── wtj.py          # Welcome to the Jungle scraper
-│   ├── indeed.py       # Indeed scraper
-│   └── ctftime.py      # CTFtime scraper
-├── main.py             # Entry point
-├── config.py           # Configuration (keywords, webhook, etc.)
+│   ├── wtj.py          # Welcome to the Jungle scraper (Algolia API)
+│   └── hellowork.py    # Hellowork scraper (BeautifulSoup)
+├── main.py             # Entry point + deduplication loop
+├── config.py           # Configuration (keywords, location, interval)
 ├── notifier.py         # Discord webhook notifications
-├── requirements.txt    # Dependencies
+├── requirements.txt    # Python dependencies
+├── Dockerfile          # Docker image
+├── docker-compose.yml  # Docker Compose deployment
+├── .env.example        # Environment variable template
 └── .gitignore
 ```
 
 ---
 
-## Installation
+## Configuration
 
-### Prerequisites
+Copy `.env.example` to `.env` and fill in your Discord webhook URL:
 
-- Python 3.x
-- pip3
-
-### Steps
-
-```bash
-git clone git@github.com:Jpandreau/RadarBot.git
-cd radarbot
-pip3 install -r requirements.txt
+```
+webhook=https://discord.com/api/webhooks/XXXXXXXX/XXXXXXXX
 ```
 
-Configure your settings in `config.py` :
+Keywords and location are configured in `config.py`:
 
 ```python
-DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/..."
-JOB_KEYWORDS = ["stage", "alternance", "python"]
-JOB_LOCATION = "France"
-CTF_MIN_WEIGHT = 10
+JOB_KEYWORDS = [
+    "stage informatique",
+    "stage développeur",
+    "stage data",
+    "stage cybersécurité",
+    "stage réseau",
+]
+JOB_LOCATION = "Moulins, Allier"
+JOB_RADIUS_KM = 200
 CHECK_INTERVAL_HOURS = 6
 ```
 
-Run :
+---
+
+## Deployment
+
+### Docker (recommended — no Python required)
 
 ```bash
+git clone git@github.com:Jpandreau/RadarBot.git
+cd RadarBot
+cp .env.example .env
+# Edit .env with your Discord webhook URL
+docker compose up -d --build
+```
+
+View logs:
+```bash
+docker compose logs -f
+```
+
+Stop:
+```bash
+docker compose down
+```
+
+### Manual (Python 3.12+)
+
+```bash
+git clone git@github.com:Jpandreau/RadarBot.git
+cd RadarBot
+pip3 install -r requirements.txt
+cp .env.example .env
+# Edit .env with your Discord webhook URL
 python3 main.py
 ```
+
+---
+
+## Dependencies
+
+- `requests`
+- `beautifulsoup4`
+- `lxml`
+- `python-dotenv`
+- `schedule`
 
 ---
 
@@ -75,19 +115,9 @@ python3 main.py
 | `[REFACTOR]` | Code restructure without behavior change |
 | `[DOCS]` | README, comments, documentation |
 
-**Examples :**
+**Examples:**
 ```
-[ADD] ctftime scraper
-[FIX] discord webhook payload format
-[REM] unused import in notifier.py
-[DOCS] update README installation steps
+[ADD] hellowork scraper with IT keyword filter
+[FIX] discord webhook 429 rate limit with sleep between notifications
+[DOCS] update README with Docker deployment instructions
 ```
-
----
-
-## Dependencies
-
-- `requests`
-- `beautifulsoup4`
-- `lxml`
-- `schedule`
