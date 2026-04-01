@@ -18,7 +18,7 @@ IT_PATTERN = re.compile(
     r"informatique|développeur|developpeur|software|engineer|ingénieur logiciel|"
     r"python|java|javascript|react|angular|vue|web|backend|frontend|"
     r"fullstack|full.stack|réseau|cybersécurité|machine learning|"
-    r"cloud|devops|data|devops|système d.information|systèmes informatiques|"
+    r"cloud|devops|data|système d.information|systèmes informatiques|"
     r"numérique|programmation|algorithme|sécurité informatique"
     r")\b",
     re.IGNORECASE,
