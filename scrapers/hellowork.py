@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 from config import JOB_KEYWORDS, JOB_LOCATION, JOB_RADIUS_KM
-from scrapers.wtj import is_it_related
+from scrapers.filters import is_it_related
 
 BASE_URL = "https://www.hellowork.com"
 SEARCH_URL = BASE_URL + "/fr-fr/emploi/recherche.html"

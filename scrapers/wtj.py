@@ -1,6 +1,6 @@
-import re
 import requests
 from config import JOB_KEYWORDS, JOB_LOCATION, JOB_LAT, JOB_LNG, JOB_RADIUS_KM
+from scrapers.filters import is_it_related
 
 ALGOLIA_URL = "https://csekhvms53-1.algolianet.com/1/indexes/*/queries"
 ALGOLIA_HEADERS = {
@@ -11,22 +11,6 @@ ALGOLIA_HEADERS = {
     "Referer": "https://www.welcometothejungle.com/",
     "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:148.0) Gecko/20100101 Firefox/148.0",
 }
-
-
-IT_PATTERN = re.compile(
-    r"\b("
-    r"informatique|développeur|developpeur|software|engineer|ingénieur logiciel|"
-    r"python|java|javascript|react|angular|vue|web|backend|frontend|"
-    r"fullstack|full.stack|réseau|cybersécurité|machine learning|"
-    r"cloud|devops|data|système d.information|systèmes informatiques|"
-    r"numérique|programmation|algorithme|sécurité informatique"
-    r")\b",
-    re.IGNORECASE,
-)
-
-
-def is_it_related(title: str) -> bool:
-    return bool(IT_PATTERN.search(title))
 
 
 def fetch_wtj_jobs() -> list[dict]:

@@ -1,100 +1,121 @@
 # RadarBot
 
-Python scraper that monitors IT job offers from Welcome to the Jungle and Hellowork, then sends real-time Discord notifications based on keywords and a geographic radius filter.
+Bot Python qui détecte des offres d'alternance IT (LinkedIn, Hellowork, Welcome to the Jungle) et envoie des notifications Discord avec couleur par catégorie.
 
 ---
 
-## Features
+## Fonctionnalités
 
-- Scrapes job offers from **Welcome to the Jungle** (via Algolia API) and **Hellowork** (HTML parsing)
-- Filters IT-related jobs only (regex on title)
-- Geographic filter: **200km radius around Moulins (03)**
-- Sends notifications via **Discord webhook** (embedded messages)
-- Deduplication via `seen_jobs.json` — no double notifications
-- Runs every **6 hours** on a scheduled interval
+- Sources : **LinkedIn**, **Hellowork**, **Welcome to the Jungle**
+- Mots-clés organisés par **catégorie** (Développement, Cybersécurité, Réseau, Data)
+- Filtre strict **alternance** — rejette les stages, CDI, CDD automatiquement
+- Notifications **Discord** avec couleur par catégorie et titre cliquable
+- Déduplication — aucune offre envoyée deux fois
+- Scan automatique toutes les **6 heures**
 
 ---
 
-## Project Structure
+## Structure du projet
 
 ```
 RadarBot/
 ├── scrapers/
-│   ├── wtj.py          # Welcome to the Jungle scraper (Algolia API)
-│   └── hellowork.py    # Hellowork scraper (BeautifulSoup)
-├── main.py             # Entry point + deduplication loop
-├── config.py           # Configuration (keywords, location, interval)
-├── notifier.py         # Discord webhook notifications
-├── requirements.txt    # Python dependencies
-├── Dockerfile          # Docker image
-├── docker-compose.yml  # Docker Compose deployment
-├── .env.example        # Environment variable template
+│   ├── wtj.py          # Welcome to the Jungle (Algolia API)
+│   ├── hellowork.py    # Hellowork (HTML)
+│   └── linkedin.py     # LinkedIn (guest API)
+├── main.py             # Point d'entrée + filtre contrat + boucle
+├── config.py           # Configuration (mots-clés, filtres, sources)
+├── notifier.py         # Notifications Discord
+├── requirements.txt
+├── Dockerfile
+├── docker-compose.yml
+├── .env.example
 └── .gitignore
 ```
 
 ---
 
-## Configuration
+## Démarrage rapide
 
-Copy `.env.example` to `.env` and fill in your Discord webhook URL:
-
-```
-webhook=https://discord.com/api/webhooks/XXXXXXXX/XXXXXXXX
-```
-
-Keywords and location are configured in `config.py`:
-
-```python
-JOB_KEYWORDS = [
-    "stage informatique",
-    "stage développeur",
-    "stage data",
-    "stage cybersécurité",
-    "stage réseau",
-]
-JOB_LOCATION = "Moulins, Allier"
-JOB_RADIUS_KM = 200
-CHECK_INTERVAL_HOURS = 6
-```
-
----
-
-## Deployment
-
-### Docker (recommended — no Python required)
+### Docker (recommandé)
 
 ```bash
 git clone git@github.com:Jpandreau/RadarBot.git
 cd RadarBot
 cp .env.example .env
-# Edit .env with your Discord webhook URL
+# Remplir DISCORD_WEBHOOK_URL dans .env
 docker compose up -d --build
 ```
 
-View logs:
+Logs :
 ```bash
 docker compose logs -f
 ```
 
-Stop:
+Arrêt :
 ```bash
 docker compose down
 ```
 
-### Manual (Python 3.12+)
+### Python (3.12+)
 
 ```bash
 git clone git@github.com:Jpandreau/RadarBot.git
 cd RadarBot
 pip3 install -r requirements.txt
 cp .env.example .env
-# Edit .env with your Discord webhook URL
+# Remplir DISCORD_WEBHOOK_URL dans .env
 python3 main.py
 ```
 
 ---
 
-## Dependencies
+## Configuration
+
+### Mots-clés et catégories — `config.py`
+
+Les mots-clés sont organisés par catégorie dans `config.py`. Chaque catégorie a sa couleur dans Discord.
+
+```python
+JOB_KEYWORDS = {
+    "Développement": ["Alternance Développeur web", "Alternance Développeur Full Stack"],
+    "Cybersécurité": ["Alternance Cybersécurité"],
+    "Réseau":        ["Alternance Réseau"],
+    "Data":          ["Alternance Data"],
+}
+```
+
+Pour ajouter une catégorie ou un mot-clé, modifier directement `config.py`.
+
+### Variables d'environnement — `.env`
+
+Les paramètres avancés peuvent être surchargés via `.env` (copier `.env.example`) :
+
+| Variable | Description | Défaut |
+|---|---|---|
+| `DISCORD_WEBHOOK_URL` | Webhook Discord **(obligatoire)** | — |
+| `JOB_SOURCES` | Sources actives (linkedin,hellowork,wtj) | toutes |
+| `JOB_LOCATION` | Ville/zone de recherche | Moulins, Allier |
+| `JOB_RADIUS_KM` | Rayon de recherche en km | 150 |
+| `ALTERNANCE_REQUIRED_TERMS` | Termes requis dans le titre | alternance,apprentissage |
+| `EXCLUDED_JOB_TERMS` | Termes interdits dans le titre | stage,cdi,cdd,... |
+| `LINKEDIN_MAX_PAGES` | Pages LinkedIn par mot-clé | 2 |
+| `CHECK_INTERVAL_HOURS` | Intervalle de scan en heures | 6 |
+
+---
+
+## Dépannage
+
+| Problème | Solution |
+|---|---|
+| Erreur webhook | Vérifier `DISCORD_WEBHOOK_URL` dans `.env` |
+| Aucune offre | Augmenter `JOB_RADIUS_KM`, assouplir les mots-clés |
+| Trop d'offres hors cible | Ajouter des termes dans `EXCLUDED_JOB_TERMS` |
+| Offres alternance manquées | Réduire `ALTERNANCE_REQUIRED_TERMS` |
+
+---
+
+## Dépendances
 
 - `requests`
 - `beautifulsoup4`
@@ -104,20 +125,13 @@ python3 main.py
 
 ---
 
-## Commit Convention
+## Convention de commits
 
 | Tag | Usage |
 |---|---|
-| `[ADD]` | New file or feature |
-| `[FIX]` | Bug fix |
-| `[REM]` | Remove file or feature |
-| `[CODINGSTYLE]` | Formatting, naming, style |
-| `[REFACTOR]` | Code restructure without behavior change |
-| `[DOCS]` | README, comments, documentation |
-
-**Examples:**
-```
-[ADD] hellowork scraper with IT keyword filter
-[FIX] discord webhook 429 rate limit with sleep between notifications
-[DOCS] update README with Docker deployment instructions
-```
+| `[ADD]` | Nouveau fichier ou fonctionnalité |
+| `[FIX]` | Correction de bug |
+| `[REM]` | Suppression |
+| `[CODINGSTYLE]` | Formatage, nommage, style |
+| `[REFACTOR]` | Restructuration sans changement de comportement |
+| `[DOCS]` | README, commentaires, documentation |
