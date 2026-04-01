@@ -8,7 +8,7 @@ from notifier import notify_job
 from scrapers.wtj import fetch_wtj_jobs
 from scrapers.hellowork import fetch_hellowork_jobs
 
-SEEN_FILE = "seen_jobs.json"
+SEEN_FILE = os.path.join(os.getenv("DATA_DIR", "."), "seen_jobs.json")
 
 
 def load_seen() -> set:
