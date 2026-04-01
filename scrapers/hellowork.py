@@ -13,38 +13,40 @@ HEADERS = {
 def fetch_hellowork_jobs() -> list[dict]:
     results = []
 
-    for keyword in JOB_KEYWORDS:
-        params = {"k": keyword, "l": JOB_LOCATION, "ray": JOB_RADIUS_KM}
-        resp = requests.get(SEARCH_URL, params=params, headers=HEADERS, timeout=10)
-        resp.raise_for_status()
+    for category, keywords in JOB_KEYWORDS.items():
+        for keyword in keywords:
+            params = {"k": keyword, "l": JOB_LOCATION, "ray": JOB_RADIUS_KM}
+            resp = requests.get(SEARCH_URL, params=params, headers=HEADERS, timeout=10)
+            resp.raise_for_status()
 
-        soup = BeautifulSoup(resp.text, "lxml")
-        cards = soup.select("[data-cy=serpCard]")
+            soup = BeautifulSoup(resp.text, "lxml")
+            cards = soup.select("[data-cy=serpCard]")
 
-        for card in cards:
-            title_tag = card.select_one("[data-cy=offerTitle]")
-            if not title_tag:
-                continue
+            for card in cards:
+                title_tag = card.select_one("[data-cy=offerTitle]")
+                if not title_tag:
+                    continue
 
-            paragraphs = title_tag.select("p")
-            title = paragraphs[0].get_text(strip=True) if len(paragraphs) > 0 else "N/A"
-            if not is_it_related(title):
-                continue
-            company = paragraphs[1].get_text(strip=True) if len(paragraphs) > 1 else "N/A"
+                paragraphs = title_tag.select("p")
+                title = paragraphs[0].get_text(strip=True) if len(paragraphs) > 0 else "N/A"
+                if not is_it_related(title):
+                    continue
+                company = paragraphs[1].get_text(strip=True) if len(paragraphs) > 1 else "N/A"
 
-            texts = list(card.stripped_strings)
-            location = texts[2] if len(texts) > 2 else JOB_LOCATION
+                texts = list(card.stripped_strings)
+                location = texts[2] if len(texts) > 2 else JOB_LOCATION
 
-            href = title_tag.get("href", "")
-            url = BASE_URL + href
+                href = title_tag.get("href", "")
+                url = BASE_URL + href
 
-            results.append({
-                "title": title,
-                "company": company,
-                "location": location,
-                "url": url,
-                "source": "Hellowork",
-                "id": href,
-            })
+                results.append({
+                    "title": title,
+                    "company": company,
+                    "location": location,
+                    "url": url,
+                    "source": "Hellowork",
+                    "category": category,
+                    "id": href,
+                })
 
     return results

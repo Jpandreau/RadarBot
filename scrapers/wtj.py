@@ -32,29 +32,31 @@ def is_it_related(title: str) -> bool:
 def fetch_wtj_jobs() -> list[dict]:
     results = []
 
-    for keyword in JOB_KEYWORDS:
-        payload = {
-            "requests": [{
-                "indexName": "wttj_jobs_production_fr",
-                "params": f"query={keyword}&hitsPerPage=50&aroundLatLng={JOB_LAT},{JOB_LNG}&aroundRadius={JOB_RADIUS_KM * 1000}",
-            }]
-        }
+    for category, keywords in JOB_KEYWORDS.items():
+        for keyword in keywords:
+            payload = {
+                "requests": [{
+                    "indexName": "wttj_jobs_production_fr",
+                    "params": f"query={keyword}&hitsPerPage=50&aroundLatLng={JOB_LAT},{JOB_LNG}&aroundRadius={JOB_RADIUS_KM * 1000}",
+                }]
+            }
 
-        resp = requests.post(ALGOLIA_URL, json=payload, headers=ALGOLIA_HEADERS, timeout=10)
-        resp.raise_for_status()
-        hits = resp.json()["results"][0]["hits"]
+            resp = requests.post(ALGOLIA_URL, json=payload, headers=ALGOLIA_HEADERS, timeout=10)
+            resp.raise_for_status()
+            hits = resp.json()["results"][0]["hits"]
 
-        for hit in hits:
-            title = hit.get("name", "N/A")
-            if not is_it_related(title):
-                continue
-            results.append({
-                "title": title,
-                "company": hit.get("organization", {}).get("name", "N/A"),
-                "location": hit.get("offices", [{}])[0].get("city", JOB_LOCATION),
-                "url": f"https://www.welcometothejungle.com/fr/companies/{hit.get('organization', {}).get('slug', '')}/jobs/{hit.get('slug', '')}",
-                "source": "WTJ",
-                "id": hit.get("objectID"),
-            })
+            for hit in hits:
+                title = hit.get("name", "N/A")
+                if not is_it_related(title):
+                    continue
+                results.append({
+                    "title": title,
+                    "company": hit.get("organization", {}).get("name", "N/A"),
+                    "location": hit.get("offices", [{}])[0].get("city", JOB_LOCATION),
+                    "url": f"https://www.welcometothejungle.com/fr/companies/{hit.get('organization', {}).get('slug', '')}/jobs/{hit.get('slug', '')}",
+                    "source": "WTJ",
+                    "category": category,
+                    "id": hit.get("objectID"),
+                })
 
     return results
