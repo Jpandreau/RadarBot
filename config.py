@@ -43,20 +43,10 @@ DISCORD_WEBHOOK_URL = (
 # La catégorie détermine la couleur de la notification Discord.
 # Modifier ici pour personnaliser les recherches.
 JOB_KEYWORDS = {
-    "Développement": [
-        "Alternance Développeur web",
-        "Alternance Développeur Full Stack",
-        "Alternance Développeur Python",
-    ],
-    "Cybersécurité": [
-        "Alternance Cybersécurité",
-    ],
-    "Réseau": [
-        "Alternance Réseau",
-    ],
-    "Data": [
-        "Alternance Data",
-    ],
+    "Développement": ["stage développeur", "stage informatique"],
+    "Cybersécurité": ["stage cybersécurité"],
+    "Réseau": ["stage réseau"],
+    "Data": ["stage data"],
 }
 
 # Zone de recherche.
@@ -74,13 +64,13 @@ LINKEDIN_MAX_PAGES = max(1, _env_int("LINKEDIN_MAX_PAGES", 2))
 # Filtre contrat : l'offre doit contenir au moins un de ces termes.
 ALTERNANCE_REQUIRED_TERMS = _env_list(
     "ALTERNANCE_REQUIRED_TERMS",
-    ["alternance", "apprentissage"],
+    ["stage"],
 )
 
 # Filtre contrat : l'offre est rejetée si elle contient un de ces termes.
 EXCLUDED_JOB_TERMS = _env_list(
     "EXCLUDED_JOB_TERMS",
-    ["stage", "internship", "cdi", "cdd", "freelance", "interim", "intérim"],
+    ["alternance", "apprentissage", "cdi", "cdd", "freelance", "interim", "intérim"],
 )
 
 # Fréquence de scan en heures.
